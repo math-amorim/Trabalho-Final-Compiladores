@@ -1,6 +1,6 @@
-float maior (float a, float b)
+float fat (float a, float b)
 {
-  int m;
+  int m, m;
   
   if (a > b) {m = a;}
   else {m = b;}
@@ -9,7 +9,6 @@ float maior (float a, float b)
 
 int fat (int n)
 {
-  int f;
   
   f = 0;
   while (n > 0)
@@ -27,17 +26,17 @@ void imprimir(string s, float r)
   
   print (s);
   print (r);
-  return 0;
+
+  return 0; 
 }
 
 {
   int x, num;
   float a;
-  
+  matheus();
   print("Numero:");
   read (num);
   x = fat (4.5);
   a = maior (2.5, 10);
   imprimir(1, "teste:", 2);
-  return 0;
 }

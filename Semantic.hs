@@ -64,14 +64,20 @@ verExpr funcoes vars (DoubleInt e1) = do
         return (t, e')
 
 verExpr funcoes vars (Chama id es) = do 
-     case buscarFuncao id funcoes of
-        Just funcao -> do
-            let (i :->: (vars', tipo)) = funcao
-            es' <- verChamadas funcoes vars funcao funcao es
-            return (tipo, Chama id es')
-        Nothing -> do
-            erro ("A função de nome " ++ id ++ " não foi declarada!")
-            return (TVOID, Chama id es)
+     f <- case buscarFuncao id funcoes of 
+          Just funcao -> return funcao 
+          Nothing -> return (id :->: ([], TVOID))
+     
+     let (i :->: (_, tipo)) = f 
+
+     if tipo == TVOID then do 
+        erro ("A função de nome " ++ id ++ " não foi declarada!")
+        return (TVOID, Chama id es)
+     else do 
+        let (i :->: (vars', tipo)) = f
+        es' <- verChamadas funcoes vars f f es
+        return (tipo, Chama id es')
+
 
 
 verExpr funcoes vars (Add e1 e2) = verAritExpr funcoes vars Add e1 e2 
@@ -93,7 +99,7 @@ verExpr funcoes vars (Neg e)  = do
   (t, e') <- verExpr funcoes vars e
   if (t == TSTRING)
     then do
-      erro "Não é possível tornar uma string negativa!" 
+      erro ("Não é possível tornar uma string negativa! Erro na expressão " ++ show e)  
       return (TVOID, e)
   else pure(t, e')
 
@@ -121,7 +127,7 @@ verAritExpr funcoes vars op e1 e2 = do
 
     if t1 == TSTRING || t2 == TSTRING
         then do
-            erro "Apenas se pode utilizar tipo String em expressoes relacionais."
+            erro ("Apenas se pode utilizar tipo String em expressoes relacionais. Erro acontecendo com expressões: " ++ show e1 ++ " ou " ++ show e2 ++ ". Verifique tipagem da expressão corretamente.") 
             return (TSTRING, op e1' e2')
         else if t1 == t2
             then pure (t1, op e1' e2')
@@ -134,7 +140,7 @@ verAritExpr funcoes vars op e1 e2 = do
                         adv ("Conversão implícita de Int para Double no segundo operando " ++ show e2)  
                         return (t2, op e1' (IntDouble e2'))
                 else do 
-                    erro ("Tipos incompatíveis: " ++ show t1 ++ " e " ++ show t2)
+                    erro ("Tipos incompatíveis na expressão " ++ show e1' ++ " e " ++ show e2' ++ ". Seus respectivos tipos são: " ++ show t1 ++ " e " ++ show t2)
                     return (TVOID, op e1' e2')
 
 -- VERIFICAÇÃO DE EXPRESSÕES RELACIONAIS
@@ -145,7 +151,7 @@ verRelExpr funcoes vars op e1 e2 = do
 
     if t1 == TSTRING && t2 /= TSTRING || t1 /= TSTRING && t2 == TSTRING
         then do 
-            erro "Variáveis de ambos os lados devem ser do tipo String para que se possa realizar a expressão relacional."
+            erro ("Variáveis de ambos os lados devem ser do tipo String para que se possa realizar a expressão relacional com expressões : " ++ show e1 ++ " e " ++ show e2) 
             return (op e1' e2')
         else if t1 == t2
             then pure (op e1' e2')
@@ -158,7 +164,7 @@ verRelExpr funcoes vars op e1 e2 = do
                         adv ("Conversão implícita de Int para Double no segundo operando " ++ show e2)  
                         return (op e1' (IntDouble e2'))
                     else do
-                        erro ("Tipos incompatíveis: " ++ show t1 ++ " e " ++ show t2) 
+                        erro ("Tipos incompatíveis na expressão " ++ show e1' ++ " e " ++ show e2' ++ ". Seus respectivos tipos são: " ++ show t1 ++ " e " ++ show t2)
                         return (op e1' e2') 
 
 -- VERIFICAÇÃO DE EXPRESSÕES BOOLENAAS 
@@ -182,9 +188,11 @@ extrairIdVar (id :#: _) = id
 -- função para verificar variaveis  
 buscarVar :: Id -> [Var] -> Maybe Tipo 
 buscarVar id [] = Nothing 
-buscarVar id ((id' :#: (tipo, escopo)):vars)
-    | id == id' = Just tipo 
-    | otherwise = buscarVar id vars
+
+buscarVar id vars = do 
+    let ((id' :#: (tipo, escopo)) : vs) = vars
+    if id == id' then Just tipo 
+    else buscarVar id vs 
 
 
 -- verifica múltiplas declarações de variáveis
@@ -193,24 +201,28 @@ verificaMultiplasVars vars = verificar vars [] []
   where
     verificar [] vistos validadas = pure validadas 
 
-    verificar (v@(id' :#: tipo) :vs) vistos validadas
-      | id' `elem` vistos = do
-          erro ("Variável " ++ id' ++ " declarada múltiplas vezes.")
-          verificar vs vistos validadas
-      | otherwise = verificar vs (id':vistos) (v:validadas)
+    verificar vars vistos validadas = do 
+        let ((id' :#: tipo) : vs) = vars 
+        let var = (id' :#: tipo) 
 
+        if id' `elem` vistos then do
+            erro ("Variável '" ++ id' ++ "' declarada múltiplas vezes.")
+            verificar vs vistos validadas 
+        else verificar vs (id':vistos) (var :validadas)
 
 -- SESSÃO PARA VERIFICAÇÃO DE FUNÇÕES 
 
 verificaMultiplasFuncoes :: Id -> [Funcao] -> M [Funcao]
-
 verificaMultiplasFuncoes _ [] = pure []
 
-verificaMultiplasFuncoes id (fun@(id' :->: (tipo, int)) : fs)
-    | id == id' = do
+verificaMultiplasFuncoes id funcoes = do
+    let ((id' :->: (tipo,int)) :  fs) = funcoes
+    let fun = (id' :->: (tipo,int))
+
+    if id == id' then do 
         rest <- verificaMultiplasFuncoes id fs 
-        pure (fun : rest)
-    | otherwise = verificaMultiplasFuncoes id fs
+        pure(fun : rest)
+    else verificaMultiplasFuncoes id fs 
 
 
 verFuncao :: [Funcao] -> Funcao -> (Id, [Var], Bloco) -> M(Funcao, (Id, [Var], Bloco)) 
@@ -220,7 +232,7 @@ verFuncao funcoes f (id, vars, bloco) = do
     funcoesRepetidas <-  verificaMultiplasFuncoes (extrairIdFuncao f) funcoes
      
     if length funcoesRepetidas > 1 then do 
-        erro("Função " ++ id ++ " foi declarada mais de uma vez!")
+        erro("Função '" ++ id ++ "' foi declarada mais de uma vez!")
         pure(f, (id, vars, bloco'))
     else 
         pure(f, (id, vars, bloco'))
@@ -238,11 +250,13 @@ verFuncoes funcoes (f : fs) ((id, vars, bloco) : restante) = do
 -- verifica nome da função e se exite 
 buscarFuncao :: Id -> [Funcao] -> Maybe Funcao 
 buscarFuncao id [] = Nothing 
-buscarFuncao id (fun@(id' :->: (tipo, vars)) : funcoes)
-    | id == id' = Just fun 
-    | otherwise = buscarFuncao id funcoes
 
+buscarFuncao id funcoes = do 
+    let ((id' :->: (tipo, vars)) : fs) = funcoes 
+    let fun = (id' :->: (tipo,vars)) 
 
+    if id == id' then Just fun 
+    else buscarFuncao id fs 
 
 -- SESSÃO PARA VERIFICAR BLOCOS
 verBloco :: [Funcao] -> Maybe Funcao -> [Var] -> Bloco -> M Bloco 
@@ -266,7 +280,7 @@ verComando funcoes _  vars (Atrib id expr) = do
 
     if t1 == TVOID 
         then do 
-            erro("Variavel " ++ id ++ " nao foi declarada!!")
+            erro("Variavel '" ++ id ++ "' nao foi declarada!")
             return (Atrib id expr)
     else 
         if t1 == t2
@@ -292,7 +306,7 @@ verComando funcoes f vars (Proc id expressoes) =
             expressoes' <- verChamadas funcoes vars fun fun expressoes
             return (Proc id expressoes')
         Nothing -> do  
-            erro ("Função de nome " ++ id ++ " nao declarada")
+            erro ("Função de nome '" ++ id ++ "' nao declarada!")
             return (Proc id expressoes)
 
 
@@ -301,7 +315,8 @@ verComando funcoes f vars (Ret maybe) = do
     t1 <- case buscarFuncao (extrairId f) funcoes of
               Just (_ :->: (_, tipo)) -> return tipo
               Nothing  -> return TVOID
-    
+
+
     case maybe of  
         Just e -> do 
             (t2, e') <- verExpr funcoes vars e
@@ -309,25 +324,25 @@ verComando funcoes f vars (Ret maybe) = do
             if t1 == t2 then 
                 pure (Ret (Just e'))  
             else if t1 == TSTRING && t2 /= TSTRING then do 
-                erro ("Função "  ++ (extrairId f) ++ " deve retornar tipo STRING! O que a função retorna: " ++ show t1 ++ ". O que está retornando: " ++ show t2)
+                erro ("Função '"  ++ (extrairId f) ++ "' deve retornar tipo STRING! O que a função retorna: " ++ show t1 ++ ". O que está retornando: " ++ show t2)
                 return (Ret (Just e'))
             else if t1 /= TSTRING && t2 == TSTRING then do
-                erro ("Função "  ++ (extrairId f) ++ " deve ser do tipo STRING! O que a função retorna: " ++ show t1 ++ ". O que está retornando: " ++ show t2)
+                erro ("Função '"  ++ (extrairId f) ++ "' deve ser do tipo STRING! O que a função retorna: " ++ show t1 ++ ". O que está retornando: " ++ show t2)
                 return (Ret (Just e'))
             else if t1 == TDOUBLE && t2 == TINT then 
                 return (Ret (Just (IntDouble e')))
             else if t1 == TINT && t2 == TDOUBLE then do 
-                adv ("Conversão implícita de double para inteiro na expressão que vai ser retornada na função " ++ (extrairId f))
+                adv ("Conversão implícita de double para inteiro na expressão que vai ser retornada na função '" ++ (extrairId f)++"'.")
                 return (Ret (Just (DoubleInt e')))
             else do 
-                erro ("Função "  ++ (extrairId f) ++ " não esperava retorno.")
+                erro ("Função '"  ++ (extrairId f) ++ "' não esperava retorno!")
                 return (Ret (Just e'))
 
         Nothing -> 
             if t1 == TVOID then 
                 pure (Ret Nothing)
             else do 
-                erro ("Função " ++ (extrairId f) ++" espera retorno.")
+                erro ("Função '" ++ (extrairId f) ++"' espera retorno!")
                 pure (Ret Nothing)
 
 
@@ -343,16 +358,20 @@ verComando funcoes f vars (While e b) = do
     pure(While e' b')
 
 verComando _ _ vars (Leitura v) = do 
-
     t1 <- case buscarVar v vars of
               Just tipo -> return tipo
               Nothing  -> return TVOID
     
     if t1 == TVOID then do 
-        erro("Variável " ++   v ++ " não foi declarada!") 
+        erro("Variável '" ++   v ++ "' não foi declarada!") 
         return (Leitura v)
     else 
         pure(Leitura v)
+
+
+verNumParametro :: [Var] -> [Expr] -> Int
+verNumParametro vars exprs = 
+    length vars - length exprs
 
 
 verChamadas :: [Funcao] -> [Var] -> Funcao -> Funcao -> [Expr] -> M[Expr]
@@ -361,14 +380,17 @@ verChamadas funcoes variaveis fun (_ :->: ([], _)) [] = pure []
 
 verChamadas funcoes variaveis fun f exprs = do 
     let (id :->: (vars, tipo)) = f 
-    if length vars < length exprs
+    let i = verNumParametro vars exprs
+
+    if i < 0
         then do 
-            erro("Muitos argumentos na função chamada " ++ id)
+            erro("Muitos argumentos na função chamada '" ++ id++"'!")
             return exprs 
-        else if length vars > length exprs 
+        else if i > 0 
             then do 
-                erro("Poucos argumentos na função chamada: " ++ id)
+                erro("Poucos argumentos na função chamada: '" ++ id++"'!")
                 return exprs 
+    
     else do 
         let (v : vs) = vars
 
@@ -386,20 +408,20 @@ verChamadas funcoes variaveis fun f exprs = do
             pure(e' : vs')
         else 
             if t1 == TSTRING && t2 /= TSTRING then do
-                erro("Tipo da expressão é: " ++ show t2 ++ " na função " ++ id ++ ". Esperava-se tipo String!")
+                erro("Tipo da expressão é: " ++ show t2 ++ " na função '" ++ id ++ "'. Esperava-se tipo String!")
                 return (e': vs')
             else 
                 if t1 /= TSTRING && t2 == TSTRING then do 
-                    erro("Esperava-se tipo " ++ show t1 ++ " na função " ++ id ++ "! Porem expressão é do tipo String.")
+                    erro("Esperava-se tipo " ++ show t1 ++ " na função '" ++ id ++ "'! Porem expressão é do tipo String.")
                     return(e' : vs')
                 else 
                     if t1 == TINT && t2 == TDOUBLE then do 
-                        adv("Conversão implícita da expressão recebida na função " ++ id ++ "de double para inteira!!")
+                        adv("Conversão implícita da expressão recebida na função '" ++ id ++ "' de double para inteira!!")
                         return (DoubleInt e' : vs')
                     else 
                         if t1 == TDOUBLE && t2 == TINT then
                             return (IntDouble e' : vs')
                         else do 
-                            erro("Tipo inválido no argumento da função " ++ id)
+                            erro("Tipo inválido no argumento da função '" ++ id ++ "'.")
                             return (e' : vs')
 
