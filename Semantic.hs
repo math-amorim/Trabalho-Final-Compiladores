@@ -34,7 +34,7 @@ analisarSemantica ast = do
 
 analisaPrograma :: Programa -> M Programa 
 analisaPrograma (Prog listaFuncoes corpoFuncoes variaveis bloco) = do 
-    (listaFuncoes', corpoFuncoes') <- verFuncoes listaFuncoes listaFuncoes corpoFuncoes
+    (listaFuncoes', corpoFuncoes') <- verFuncoes listaFuncoes corpoFuncoes
     bloco' <- verBloco listaFuncoes Nothing variaveis bloco  
     variaveis' <- verificaMultiplasVars variaveis
     pure(Prog listaFuncoes' corpoFuncoes'  variaveis' bloco')
@@ -238,16 +238,17 @@ verFuncao funcoes f (id, vars, bloco) = do
         pure(f, (id, vars, bloco'))
 
 
-verFuncoes :: [Funcao] -> [Funcao] -> [(Id, [Var], Bloco)] -> M([Funcao], [(Id, [Var], Bloco)])
+verFuncoes :: [Funcao] -> [(Id, [Var], Bloco)] -> M([Funcao], [(Id, [Var], Bloco)])
+verFuncoes _ [] = pure ([],[])
+verFuncoes funcoes ((id, vars, bloco) : restante) = do 
+    let (f : fs) = funcoes  
 
-verFuncoes _ [] [] = pure ([],[])
-verFuncoes funcoes (f : fs) ((id, vars, bloco) : restante) = do 
     vars' <- verificaMultiplasVars vars
     (f', bloco') <- verFuncao funcoes f (id, vars', bloco)
-    (fs', bs') <- verFuncoes funcoes fs restante
+    (fs', bs') <- verFuncoes fs restante
     pure(f' : fs, bloco' : bs') 
 
--- verifica nome da função e se exite 
+-- verifica se função existe 
 buscarFuncao :: Id -> [Funcao] -> Maybe Funcao 
 buscarFuncao id [] = Nothing 
 
