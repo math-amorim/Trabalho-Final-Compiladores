@@ -1,0 +1,3 @@
+1º - Compila Lex.x usando o alex (alex Lex.x)
+2º - Compila Parser.y usando happy (happy Parser.y) 
+3º - Roda usando ghci Main

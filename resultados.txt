@@ -1,0 +1,18 @@
+Tokens gerados pela análise léxica:
+[TDouble,ID "maior",LPAR,TDouble,ID "a",VIRG,TDouble,ID "b",RPAR,LCOL,TInt,ID "m",PONTVIRG,IF,LPAR,ID "a",RGT,ID "b",RPAR,LCOL,ID "m",IGUAL,ID "a",PONTVIRG,RCOL,ELSE,LCOL,ID "m",IGUAL,ID "b",PONTVIRG,RCOL,Return,ID "m",PONTVIRG,RCOL,TInt,ID "fat",LPAR,TInt,ID "n",RPAR,LCOL,TInt,ID "f",PONTVIRG,ID "f",IGUAL,INT 0,PONTVIRG,WHILE,LPAR,ID "n",RGT,INT 0,RPAR,LCOL,ID "f",IGUAL,ID "f",MUL,ID "n",PONTVIRG,ID "n",IGUAL,ID "n",SUB,INT 1,PONTVIRG,RCOL,Return,ID "f",PONTVIRG,RCOL,TVoid,ID "imprimir",LPAR,TString,ID "s",VIRG,TDouble,ID "r",RPAR,LCOL,TInt,ID "s",PONTVIRG,Print,LPAR,ID "s",RPAR,PONTVIRG,Print,LPAR,ID "r",RPAR,PONTVIRG,Return,INT 0,PONTVIRG,RCOL,LCOL,TInt,ID "x",VIRG,ID "num",PONTVIRG,TDouble,ID "a",PONTVIRG,Print,LPAR,LITERAL "Numero:",RPAR,PONTVIRG,Read,LPAR,ID "num",RPAR,PONTVIRG,ID "x",IGUAL,ID "fat",LPAR,FLOAT 4.5,RPAR,PONTVIRG,ID "a",IGUAL,ID "maior",LPAR,FLOAT 2.5,VIRG,INT 10,RPAR,PONTVIRG,ID "imprimir",LPAR,INT 1,VIRG,LITERAL "teste:",VIRG,INT 2,RPAR,PONTVIRG,Return,INT 0,PONTVIRG,RCOL]
+
+
+Árvore Abstrata gerada pela análise sintática:
+Prog ["maior" :->: (["a" :#: (TDOUBLE,0),"b" :#: (TDOUBLE,0)],TDOUBLE),"fat" :->: (["n" :#: (TINT,0)],TINT),"imprimir" :->: (["s" :#: (TSTRING,0),"r" :#: (TDOUBLE,0)],TVOID)] [("maior",["a" :#: (TDOUBLE,0),"b" :#: (TDOUBLE,0),"m" :#: (TINT,0)],[If (Rel (Rgt (IdVar "a") (IdVar "b"))) [Atrib "m" (IdVar "a")] [Atrib "m" (IdVar "b")],Ret (Just (IdVar "m"))]),("fat",["n" :#: (TINT,0),"f" :#: (TINT,0)],[Atrib "f" (Const (CInt 0)),While (Rel (Rgt (IdVar "n") (Const (CInt 0)))) [Atrib "f" (Mul (IdVar "f") (IdVar "n")),Atrib "n" (Sub (IdVar "n") (Const (CInt 1)))],Ret (Just (IdVar "f"))]),("imprimir",["s" :#: (TSTRING,0),"r" :#: (TDOUBLE,0),"s" :#: (TINT,0)],[Imp (IdVar "s"),Imp (IdVar "r"),Ret (Just (Const (CInt 0)))])] ["x" :#: (TINT,0),"num" :#: (TINT,0),"a" :#: (TDOUBLE,0)] [Imp (Const (CString "Numero:")),Leitura "num",Atrib "x" (Chama "fat" [Const (CFloat 4.5)]),Atrib "a" (Chama "maior" [Const (CFloat 2.5),Const (CInt 10)]),Proc "imprimir" [Const (CInt 1),Const (CString "teste:"),Const (CInt 2)],Ret (Just (Const (CInt 0)))]
+
+
+Resultados da análise semântica:
+Adv: Conversão implícita de double para inteiro na expressão dada: IdVar "a"
+Adv: Conversão implícita de double para inteiro na expressão dada: IdVar "b"
+Erro: Variável s declarada múltiplas vezes.
+Erro: Função imprimir não esperava retorno.
+Erro: Função LABELPARARETORNODENOTHING não esperava retorno.
+Erro: Muitos argumentos na função chamada imprimir
+Adv: Conversão implícita da expressão recebida na função nde double para inteira!!
+
+Prog ["maior" :->: (["a" :#: (TDOUBLE,0),"b" :#: (TDOUBLE,0)],TDOUBLE),"fat" :->: (["n" :#: (TINT,0)],TINT),"imprimir" :->: (["s" :#: (TSTRING,0),"r" :#: (TDOUBLE,0)],TVOID)] [("maior",["m" :#: (TINT,0),"b" :#: (TDOUBLE,0),"a" :#: (TDOUBLE,0)],[If (Rel (Rgt (IdVar "a") (IdVar "b"))) [Atrib "m" (DoubleInt (IdVar "a"))] [Atrib "m" (DoubleInt (IdVar "b"))],Ret (Just (IntDouble (IdVar "m")))]),("fat",["f" :#: (TINT,0),"n" :#: (TINT,0)],[Atrib "f" (Const (CInt 0)),While (Rel (Rgt (IdVar "n") (Const (CInt 0)))) [Atrib "f" (Mul (IdVar "f") (IdVar "n")),Atrib "n" (Sub (IdVar "n") (Const (CInt 1)))],Ret (Just (IdVar "f"))]),("imprimir",["r" :#: (TDOUBLE,0),"s" :#: (TSTRING,0)],[Imp (IdVar "s"),Imp (IdVar "r"),Ret (Just (Const (CInt 0)))])] ["a" :#: (TDOUBLE,0),"num" :#: (TINT,0),"x" :#: (TINT,0)] [Imp (Const (CString "Numero:")),Leitura "num",Atrib "x" (Chama "fat" [DoubleInt (Const (CFloat 4.5))]),Atrib "a" (Chama "maior" [Const (CFloat 2.5),IntDouble (Const (CInt 10))]),Proc "imprimir" [Const (CInt 1),Const (CString "teste:"),Const (CInt 2)],Ret (Just (Const (CInt 0)))]
