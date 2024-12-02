@@ -1,30 +1,14 @@
 Tokens gerados pela análise léxica:
-[TDouble,ID "fat",LPAR,TDouble,ID "a",VIRG,TDouble,ID "b",RPAR,LCOL,TInt,ID "m",VIRG,ID "m",PONTVIRG,IF,LPAR,ID "a",RGT,ID "b",RPAR,LCOL,ID "m",IGUAL,ID "a",PONTVIRG,RCOL,ELSE,LCOL,ID "m",IGUAL,ID "b",PONTVIRG,RCOL,Return,ID "m",PONTVIRG,RCOL,TInt,ID "fat",LPAR,TInt,ID "n",RPAR,LCOL,ID "f",IGUAL,INT 0,PONTVIRG,WHILE,LPAR,ID "n",RGT,INT 0,RPAR,LCOL,ID "f",IGUAL,ID "f",MUL,ID "n",PONTVIRG,ID "n",IGUAL,ID "n",SUB,INT 1,PONTVIRG,RCOL,Return,ID "f",PONTVIRG,RCOL,TVoid,ID "imprimir",LPAR,TString,ID "s",VIRG,TDouble,ID "r",RPAR,LCOL,TInt,ID "s",PONTVIRG,Print,LPAR,ID "s",RPAR,PONTVIRG,Print,LPAR,ID "r",RPAR,PONTVIRG,Return,INT 0,PONTVIRG,RCOL,LCOL,TInt,ID "x",VIRG,ID "num",PONTVIRG,TDouble,ID "a",PONTVIRG,ID "matheus",LPAR,RPAR,PONTVIRG,Print,LPAR,LITERAL "Numero:",RPAR,PONTVIRG,Read,LPAR,ID "num",RPAR,PONTVIRG,ID "x",IGUAL,ID "fat",LPAR,FLOAT 4.5,RPAR,PONTVIRG,ID "a",IGUAL,ID "maior",LPAR,FLOAT 2.5,VIRG,INT 10,RPAR,PONTVIRG,ID "imprimir",LPAR,INT 1,VIRG,LITERAL "teste:",VIRG,INT 2,RPAR,PONTVIRG,RCOL]
+[TInt,ID "maior",LPAR,TInt,ID "a",VIRG,TDouble,ID "b",RPAR,LCOL,IF,LPAR,ID "a",RGT,ID "b",RPAR,LCOL,Return,ID "a",PONTVIRG,RCOL,Return,ID "b",PONTVIRG,RCOL,LCOL,TInt,ID "a",VIRG,ID "b",PONTVIRG,TDouble,ID "x",VIRG,ID "y",PONTVIRG,ID "a",IGUAL,FLOAT 10.5,PONTVIRG,ID "x",IGUAL,FLOAT 10.5,PONTVIRG,ID "b",IGUAL,INT 2,MUL,ID "a",ADD,LPAR,TInt,RPAR,ID "x",MUL,INT 2,PONTVIRG,ID "y",IGUAL,ID "maior",LPAR,ID "a",VIRG,ID "b",RPAR,PONTVIRG,RCOL]
 
 
 Árvore Abstrata gerada pela análise sintática:
-Prog ["fat" :->: (["a" :#: (TDOUBLE,0),"b" :#: (TDOUBLE,0)],TDOUBLE),"fat" :->: (["n" :#: (TINT,0)],TINT),"imprimir" :->: (["s" :#: (TSTRING,0),"r" :#: (TDOUBLE,0)],TVOID)] [("fat",["a" :#: (TDOUBLE,0),"b" :#: (TDOUBLE,0),"m" :#: (TINT,0),"m" :#: (TINT,0)],[If (Rel (Rgt (IdVar "a") (IdVar "b"))) [Atrib "m" (IdVar "a")] [Atrib "m" (IdVar "b")],Ret (Just (IdVar "m"))]),("fat",["n" :#: (TINT,0)],[Atrib "f" (Const (CInt 0)),While (Rel (Rgt (IdVar "n") (Const (CInt 0)))) [Atrib "f" (Mul (IdVar "f") (IdVar "n")),Atrib "n" (Sub (IdVar "n") (Const (CInt 1)))],Ret (Just (IdVar "f"))]),("imprimir",["s" :#: (TSTRING,0),"r" :#: (TDOUBLE,0),"s" :#: (TINT,0)],[Imp (IdVar "s"),Imp (IdVar "r"),Ret (Just (Const (CInt 0)))])] ["x" :#: (TINT,0),"num" :#: (TINT,0),"a" :#: (TDOUBLE,0)] [Proc "matheus" [],Imp (Const (CString "Numero:")),Leitura "num",Atrib "x" (Chama "fat" [Const (CFloat 4.5)]),Atrib "a" (Chama "maior" [Const (CFloat 2.5),Const (CInt 10)]),Proc "imprimir" [Const (CInt 1),Const (CString "teste:"),Const (CInt 2)]]
+Prog ["maior" :->: (["a" :#: (TINT,0),"b" :#: (TDOUBLE,0)],TINT)] [("maior",["a" :#: (TINT,0),"b" :#: (TDOUBLE,0)],[If (Rel (Rgt (IdVar "a") (IdVar "b"))) [Ret (Just (IdVar "a"))] [],Ret (Just (IdVar "b"))])] ["a" :#: (TINT,0),"b" :#: (TINT,0),"x" :#: (TDOUBLE,0),"y" :#: (TDOUBLE,0)] [Atrib "a" (Const (CFloat 10.5)),Atrib "x" (Const (CFloat 10.5)),Atrib "b" (Add (Mul (Const (CInt 2)) (IdVar "a")) (Mul (DoubleInt (IdVar "x")) (Const (CInt 2)))),Atrib "y" (Chama "maior" [IdVar "a",IdVar "b"])]
 
 
 Resultados da análise semântica:
-Erro: Variável 'm' declarada múltiplas vezes.
-Adv: Conversão implícita de double para inteiro na expressão dada: IdVar "a"
-Adv: Conversão implícita de double para inteiro na expressão dada: IdVar "b"
-Erro: Função 'fat' foi declarada mais de uma vez!
-Erro: Variável f não declarada!
-Erro: Função 'fat' não esperava retorno!
-Erro: Variável f não declarada!
-Erro: Tipos incompatíveis na expressão IdVar "f" e IdVar "n". Seus respectivos tipos são: TVOID e TINT
-Erro: Variavel 'f' nao foi declarada!
-Erro: Variavel 'f' nao foi declarada!
-Erro: Função 'fat' foi declarada mais de uma vez!
-Erro: Variável 's' declarada múltiplas vezes.
-Erro: Função 'imprimir' não esperava retorno!
-Erro: Muitos argumentos na função chamada 'imprimir'!
-Erro: A função de nome maior não foi declarada!
-Erro: Tipos incompatíveis. Tipo 1: TDOUBLE e Tipo 2: TVOID
-Erro: Poucos argumentos na função chamada: 'fat'!
-Adv: Conversão implícita de double para inteiro na expressão dada: Chama "fat" [Const (CFloat 4.5)]
-Erro: Função de nome 'matheus' nao declarada!
+Adv: Conversão implícita de double para inteiro na expressão que vai ser retornada na função 'maior'.
+Adv: Conversão implícita de Int para Double no primeiro operando IdVar "a"
+Adv: Conversão implícita de double para inteiro na expressão dada: Const (CFloat 10.5)
 
-Prog ["fat" :->: (["a" :#: (TDOUBLE,0),"b" :#: (TDOUBLE,0)],TDOUBLE),"fat" :->: (["n" :#: (TINT,0)],TINT),"imprimir" :->: (["s" :#: (TSTRING,0),"r" :#: (TDOUBLE,0)],TVOID)] [("fat",["m" :#: (TINT,0),"b" :#: (TDOUBLE,0),"a" :#: (TDOUBLE,0)],[If (Rel (Rgt (IdVar "a") (IdVar "b"))) [Atrib "m" (DoubleInt (IdVar "a"))] [Atrib "m" (DoubleInt (IdVar "b"))],Ret (Just (IntDouble (IdVar "m")))]),("fat",["n" :#: (TINT,0)],[Atrib "f" (Const (CInt 0)),While (Rel (Rgt (IdVar "n") (Const (CInt 0)))) [Atrib "f" (Mul (IdVar "f") (IdVar "n")),Atrib "n" (Sub (IdVar "n") (Const (CInt 1)))],Ret (Just (IdVar "f"))]),("imprimir",["r" :#: (TDOUBLE,0),"s" :#: (TSTRING,0)],[Imp (IdVar "s"),Imp (IdVar "r"),Ret (Just (Const (CInt 0)))])] ["a" :#: (TDOUBLE,0),"num" :#: (TINT,0),"x" :#: (TINT,0)] [Proc "matheus" [],Imp (Const (CString "Numero:")),Leitura "num",Atrib "x" (DoubleInt (Chama "fat" [Const (CFloat 4.5)])),Atrib "a" (Chama "maior" [Const (CFloat 2.5),Const (CInt 10)]),Proc "imprimir" [Const (CInt 1),Const (CString "teste:"),Const (CInt 2)]]
+Prog ["maior" :->: (["a" :#: (TINT,0),"b" :#: (TDOUBLE,0)],TINT)] [("maior",["b" :#: (TDOUBLE,0),"a" :#: (TINT,0)],[If (Rel (Rgt (IntDouble (IdVar "a")) (IdVar "b"))) [Ret (Just (IdVar "a"))] [],Ret (Just (DoubleInt (IdVar "b")))])] ["y" :#: (TDOUBLE,0),"x" :#: (TDOUBLE,0),"b" :#: (TINT,0),"a" :#: (TINT,0)] [Atrib "a" (DoubleInt (Const (CFloat 10.5))),Atrib "x" (Const (CFloat 10.5)),Atrib "b" (Add (Mul (Const (CInt 2)) (IdVar "a")) (Mul (DoubleInt (IdVar "x")) (Const (CInt 2)))),Atrib "y" (IntDouble (Chama "maior" [IdVar "a",IntDouble (IdVar "b")]))]

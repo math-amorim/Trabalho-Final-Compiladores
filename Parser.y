@@ -69,7 +69,6 @@ Programa : ListaFuncoes BlocoPrincipal {Prog (map fst $1) (map transformaFuncao 
 ListaFuncoes : ListaFuncoes Funcao {$1 ++ [$2]} 
 	       | Funcao {[$1]} 
  
-
 Funcao : TipoRetorno Id '(' DeclParametros ')' BlocoPrincipal {($2:->:($4,$1), $6)}   
        | TipoRetorno Id '(' ')' BlocoPrincipal {($2 :->:([],$1), $5)}   
 
@@ -166,6 +165,8 @@ Factor : CINT {Const (CInt $1)}
        | '(' ArithmeticExpr ')' {$2}
        | Id '('  ListaParametros ')' {Chama $1 $3}
        | Id '(' ')' {Chama $1 []}
+       | '(' 'int' ')' Factor {DoubleInt $4}
+
 
 {
 parseError :: [Token] -> a

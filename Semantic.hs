@@ -49,19 +49,22 @@ verExpr funcoes vars  (Const (CString s)) = pure (TSTRING, Const(CString s))
 -- VERIFICA CONVERSÕES 
 verExpr funcoes vars (IntDouble e1) = do 
     (t, e') <- verExpr  funcoes vars e1 
-    if t == TINT
-       then pure (TDOUBLE, IntDouble e')
-       else do 
-        erro ("Não pôde converter " ++ show e' ++ " pois número já é um double.")
-        return (t, e')
+    if t == TINT then pure (TDOUBLE, IntDouble e')
+       else if t == TDOUBLE then do  
+            pure (t, e')
+        else do
+            erro ("Tipo inválido para conversão " ++ show t) 
+            return(t, e')
 
 verExpr funcoes vars (DoubleInt e1) = do 
     (t, e') <- verExpr funcoes vars  e1 
-    if t == TDOUBLE
-       then pure (TINT, DoubleInt e')
-       else do 
-        erro ("Não pôde converter " ++ show e' ++ " pois número já é um inteiro.")
-        return (t, e')
+    if t == TDOUBLE then pure (TINT, DoubleInt e')
+       else if t == TINT 
+            then do  
+                pure (t, e')
+            else do 
+                erro("Tipo inválido para conversão " ++ show t)
+                return(t, e')
 
 verExpr funcoes vars (Chama id es) = do 
      f <- case buscarFuncao id funcoes of 
@@ -75,7 +78,7 @@ verExpr funcoes vars (Chama id es) = do
         return (TVOID, Chama id es)
      else do 
         let (i :->: (vars', tipo)) = f
-        es' <- verChamadas funcoes vars f f es
+        es' <- verChamadas funcoes vars f es
         return (tipo, Chama id es')
 
 
@@ -226,7 +229,6 @@ verificaMultiplasFuncoes id funcoes = do
 
 
 verFuncao :: [Funcao] -> Funcao -> (Id, [Var], Bloco) -> M(Funcao, (Id, [Var], Bloco)) 
-
 verFuncao funcoes f (id, vars, bloco) = do 
     bloco' <- verBloco funcoes (Just f) vars bloco 
     funcoesRepetidas <-  verificaMultiplasFuncoes (extrairIdFuncao f) funcoes
@@ -270,7 +272,6 @@ verBloco funcoes f vars (comando : bloco) = do
 
 -- SESSÃO PARA VERIFICAÇÃO DE COMANDOS 
 verComando :: [Funcao] -> Maybe Funcao -> [Var] -> Comando -> M(Comando)
-
 verComando funcoes _  vars (Atrib id expr) = do
     let t1 = case buscarVar id vars of
             Just tipo -> tipo 
@@ -304,7 +305,7 @@ verComando funcoes _ vars (Imp e) = do
 verComando funcoes f vars (Proc id expressoes) = 
     case buscarFuncao id funcoes of
         Just fun -> do 
-            expressoes' <- verChamadas funcoes vars fun fun expressoes
+            expressoes' <- verChamadas funcoes vars fun expressoes
             return (Proc id expressoes')
         Nothing -> do  
             erro ("Função de nome '" ++ id ++ "' nao declarada!")
@@ -375,11 +376,10 @@ verNumParametro vars exprs =
     length vars - length exprs
 
 
-verChamadas :: [Funcao] -> [Var] -> Funcao -> Funcao -> [Expr] -> M[Expr]
+verChamadas :: [Funcao] -> [Var] -> Funcao -> [Expr] -> M[Expr]
+verChamadas funcoes variaveis (_ :->: ([], _)) [] = pure []
 
-verChamadas funcoes variaveis fun (_ :->: ([], _)) [] = pure []
-
-verChamadas funcoes variaveis fun f exprs = do 
+verChamadas funcoes variaveis f exprs = do 
     let (id :->: (vars, tipo)) = f 
     let i = verNumParametro vars exprs
 
@@ -403,7 +403,7 @@ verChamadas funcoes variaveis fun f exprs = do
         
         (t2, e') <- verExpr funcoes variaveis e 
         
-        vs' <- verChamadas funcoes variaveis fun prox es
+        vs' <- verChamadas funcoes variaveis prox es
 
         if t1 == t2 then 
             pure(e' : vs')
